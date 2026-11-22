@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+test-results
+playwright-report
+.DS_Store
+
+# Cizí/licencované materiály a lokální nástroje
+.claude/vendor
+.claude/settings.local.json
+Brand manual Panattoni.pdf

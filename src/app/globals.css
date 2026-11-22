@@ -1,0 +1,418 @@
+@import "tailwindcss";
+
+/*
+ * Designové tokeny: bílé a betonové plochy, firemní navy pro tlačítka a aktivní ovládání.
+ * Navy #001844 pochází z Brand guidelines VER 2.0; limetková zůstává drobným akcentem.
+ * Z brand manuálu vychází také logo, písmo Bai Jamjuree (nadpisy)
+ * a Helvetica Neue / Arial (text) a limetková #93d50a jen jako drobný akcent (značka vybrané volby).
+ * Tokeny jsou záměrně na jednom místě, aby je šlo vyměnit, až přijde finální design.
+ */
+:root {
+  --navy: #001844;
+  --lime: #93d50a;
+
+  --bg: #edf0ed; /* beton: pozadí stránky a 3D scény */
+  --surface: #ffffff;
+  --surface-2: #f1f3f1;
+  --line: #e1e5e2;
+  --line-strong: #8c8f93;
+  --text: #20292c;
+  --muted: #616b70;
+  --accent: var(--navy);
+  --accent-hover: #001b75;
+  --on-accent: #ffffff;
+  --accent-soft: #eef2f8;
+  --select: var(--navy);
+  --focus: var(--navy);
+  --warn-text: #5e4400;
+  --warn-bg: #fdf3d2;
+  --warn-line: #e6cf86;
+  --danger: #a4262c;
+  --scene-hud-bg: rgb(255 255 255 / 0.9);
+  --shadow-raise: 0 1px 2px rgb(20 22 24 / 0.12), 0 0 0 1px rgb(20 22 24 / 0.06);
+
+  --font-display: "Bai Jamjuree", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --radius: 8px;
+  --header-h: 80px;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+html {
+  background: var(--bg);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  /* --- tlačítka a ovládací prvky: minimální dotyková plocha 44 px ---------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--navy);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 150ms, border-color 150ms;
+  }
+  .btn:hover {
+    border-color: var(--navy);
+    background: var(--accent-soft);
+  }
+  .btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+  }
+  .btn[aria-pressed="true"]:hover {
+    background: var(--accent-hover);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-sm {
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    border: 1px solid var(--warn-line);
+  }
+
+  /* --- formulářová pole --------------------------------------------------------- */
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field-label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .field-hint {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .num-input {
+    width: 7.5rem;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .num-input:hover {
+    border-color: var(--line-strong);
+  }
+  .slider {
+    width: 100%;
+    min-height: 44px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* --- panel a karty ------------------------------------------------------------ */
+  .panel-section {
+    border-bottom: 1px solid var(--line);
+  }
+  .section-head {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 20px;
+    background: none;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .choice {
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 150ms, background-color 150ms;
+  }
+  .choice {
+    position: relative;
+  }
+  .choice:hover {
+    border-color: var(--line-strong);
+  }
+  .choice[aria-checked="true"],
+  .choice[data-selected="true"] {
+    border-color: var(--select);
+    background: var(--accent-soft);
+    outline: 1px solid var(--select);
+  }
+  /* Drobná limetková značka vybrané volby (jediný barevný akcent v panelu). */
+  .choice[aria-checked="true"]::after,
+  .choice[data-selected="true"]::after {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--lime);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--select);
+  }
+  /* Přepínač: betonová dráha, vybraná volba je bílá "zvednutá" plocha s tučným písmem. */
+  .seg {
+    display: inline-grid;
+    grid-auto-flow: column;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--surface-2);
+  }
+  .seg > button {
+    white-space: nowrap;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 150ms, color 150ms;
+  }
+  .seg > button:hover {
+    color: var(--navy);
+  }
+  .seg > button[aria-checked="true"],
+  .seg > button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-raise);
+  }
+  .seg > button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* --- 3D stage ----------------------------------------------------------------- */
+  .stage-hud {
+    background: var(--scene-hud-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 1px 2px rgb(20 22 24 / 0.08);
+  }
+}
+
+/* Showroom: a quiet frame around the configurable building. */
+.showroom-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.showroom-header { min-height: var(--header-h); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px; background: var(--surface); border-bottom: 1px solid var(--line); z-index: 10; }
+.brand-link { display: flex; gap: 24px; align-items: center; line-height: 1; color: var(--text); text-decoration: none; flex-shrink: 0; }
+.brand-link img { width: 174px; height: auto; display: block; }
+.brand-divider { height: 24px; width: 1px; background: var(--line); }
+.brand-product { display: flex; align-items: center; min-height: 28px; padding-top: 6px; font-size: 14px; line-height: 1; color: var(--muted); white-space: nowrap; }
+.header-actions { display: flex; align-items: center; gap: 28px; }
+.mode-switch { border: 0; background: var(--surface-2); }
+.mode-switch > button { display: flex; align-items: center; gap: 8px; font-size: 13px; min-height: 44px; }
+.workspace { flex: 1; display: grid; grid-template-columns: 1fr; min-height: 0; }
+.stage { position: relative; height: 46dvh; min-height: 300px; background: var(--bg); touch-action: pan-y; }
+.panel { background: var(--surface); min-width: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.panel-intro { padding: 30px 28px 24px; }
+.panel-intro h1 { font-size: 34px; line-height: 1.15; letter-spacing: -1.1px; }
+.panel-intro > p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+.step-navigation { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0 24px 22px; border-bottom: 1px solid var(--line); }
+.step-navigation button { position: relative; min-height: 64px; border: 0; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; flex-direction: column; gap: 8px; font: inherit; font-size: 11px; }
+.step-navigation button::after { content: ''; position: absolute; height: 1px; background: var(--line); width: calc(100% - 36px); left: calc(50% + 18px); top: 16px; }
+.step-navigation button:last-child::after { display: none; }
+.step-number { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; font-size: 12px; transition: background 150ms, color 150ms; }
+.step-navigation button[aria-current='step'] { color: var(--navy); font-weight: 600; }
+.step-navigation button[aria-current='step'] .step-number { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px var(--line); }
+.step-navigation button:hover .step-number { border-color: var(--line-strong); }
+.panel-scroll { flex: 1; min-height: 0; }
+.step-content { padding: 26px 28px 32px; animation: step-enter 220ms ease-out; }
+.step-heading { margin-bottom: 24px; }
+.step-counter { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+.step-heading h2 { font-size: 23px; line-height: 1.2; letter-spacing: -.5px; max-width: 18ch; }
+.step-heading > p:last-child { color: var(--muted); font-size: 14px; margin: 10px 0 0; line-height: 1.6; }
+.guided-section { display: grid; gap: 24px; }
+.guided-section .choice { padding: 18px 14px; border-color: var(--line); background: var(--surface); transition: border-color 150ms, background 150ms; }
+.guided-section .choice[aria-checked='true'] { background: #f6f8f3; border-color: #829073; outline: none; }
+.guided-section .choice[aria-checked='true']::after { width: 7px; height: 7px; top: 14px; right: 14px; box-shadow: none; }
+.guided-section[data-section='concept'] > .field-hint { font-size: 12px; }
+.guided-section[data-section='concept'] .choice > svg { width: 54px; color: #667866; }
+.panel-footer { display: grid; gap: 20px; padding: 22px 28px 24px; background: var(--surface); border-top: 1px solid var(--line); }
+.panel-footer [data-testid='price-value'] { font-size: 25px; letter-spacing: -.6px; }
+.panel-footer [data-testid='price-headline'] { gap: 3px; }
+.panel-footer [role='status'] { font-size: 12px; }
+.panel-footer .chip { font-size: 10px; padding: 1px 5px; border-color: var(--line); color: var(--muted); background: var(--surface-2); border-radius: 3px; }
+.step-actions { display: flex; gap: 10px; }
+.next-button { min-height: 50px; width: 100%; justify-content: space-between; font-size: 14px; padding-inline: 20px; }
+.back-button { min-width: 50px; min-height: 50px; padding: 0; flex-shrink: 0; }
+.preview-intro h1 { font-size: 28px; }
+.preview-content { display: grid; align-content: start; gap: 32px; padding: 0 28px 28px; }
+.step-content > .panel-section { margin-inline: -28px; }
+.step-content > .panel-section:last-child { border-bottom: 0; }
+.stage-toolbar { position: absolute; top: 24px; right: 24px; left: 24px; z-index: 4; pointer-events: none; }
+.view-tools { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.view-tools > * { pointer-events: auto; }
+.view-switch { padding: 3px; background: rgba(255,255,255,.94); border: 1px solid var(--line); box-shadow: 0 3px 12px rgb(30 45 35 / 3%); }
+.view-switch > button { padding: 0 14px; min-height: 44px; font-size: 12px; }
+.view-switch > button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.view-options { position: relative; }
+.view-options > summary { list-style: none; padding: 0; width: 46px; height: 46px; cursor: pointer; }
+.view-options > summary::-webkit-details-marker { display: none; }
+.view-options-menu { position: absolute; top: 54px; right: 0; width: 238px; max-height: min(500px, 70dvh); overflow: auto; display: grid; gap: 8px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 14px 45px rgb(20 40 30 / 12%); }
+.view-options-menu .btn { justify-content: flex-start; font-size: 13px; }
+.camera-options { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+.camera-options button { border: 1px solid var(--line); background: var(--surface); min-height: 44px; border-radius: 5px; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.camera-options button[aria-checked='true'] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.replay-button { min-height: 46px; font-size: 12px; gap: 7px; background: rgba(255,255,255,.94); }
+/* V interiéru je pod popisky rušné pozadí (regály): jemný přechod drží text čitelný. */
+.stage-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 240px; pointer-events: none; background: linear-gradient(to top, color-mix(in srgb, var(--surface) 94%, transparent) 0%, color-mix(in srgb, var(--surface) 78%, transparent) 45%, transparent 100%); }
+.stage-caption { position: absolute; bottom: 62px; left: 40px; right: 32px; pointer-events: none; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.scene-context { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+.stage-caption h2 { font-size: clamp(22px, 2.2vw, 34px); letter-spacing: -.8px; line-height: 1.2; }
+.scene-stats { display: flex; flex-wrap: wrap; gap: 28px; margin: 0; }
+.scene-stats > div { display: flex; flex-direction: column; gap: 5px; }
+.scene-stats dt { color: var(--muted); font-size: 11px; }
+.scene-stats dd { font-family: var(--font-display); font-weight: 500; font-size: 22px; font-variant-numeric: tabular-nums; margin: 0; line-height: 1.2; }
+.scene-stats dd span { font-size: 14px; }
+.scene-disclaimer { pointer-events: none; position: absolute; bottom: 18px; left: 40px; right: 32px; font-size: 10px; line-height: 1.5; color: var(--muted); margin: 0; }
+.slider { appearance: none; background: transparent; }
+.slider::-webkit-slider-runnable-track { height: 3px; background: #dce2dc; border-radius: 3px; }
+.slider::-webkit-slider-thumb { appearance: none; margin-top: -7px; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); border: 3px solid white; box-shadow: 0 0 0 1px #8c978b; }
+.slider::-moz-range-track { height: 3px; background: #dce2dc; }
+.slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 3px solid white; box-shadow: 0 0 0 1px #8c978b; }
+.num-input { width: 5.5rem; border-color: var(--line); background: #fafbf9; font-size: 15px; }
+.field-label { font-size: 13px; }
+.field-hint { font-size: 12px; line-height: 1.6; }
+@keyframes step-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 1024px) {
+  .showroom-shell { height: 100dvh; overflow: hidden; }
+  .workspace { grid-template-columns: 390px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .stage { order: 2; height: 100%; min-height: 0; }
+  .panel { order: 1; height: 100%; border-top: 0; border-right: 1px solid var(--line); overflow: hidden; }
+  .panel-scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #cbd1cb transparent; }
+}
+@media (min-width: 1600px) { .workspace { grid-template-columns: 420px minmax(0, 1fr); } .panel-intro, .panel-footer { padding-inline: 34px; } .step-content { padding-inline: 34px; } .step-content > .panel-section { margin-inline: -34px; } }
+@media (max-width: 1200px) and (min-width: 1024px) { .workspace { grid-template-columns: 355px minmax(0, 1fr); } .panel-intro { padding-top: 24px; padding-bottom: 20px; } .panel-intro h1 { font-size: 30px; } .stage-caption { left: 26px; } .scene-stats { gap: 20px; } .replay-button { margin-left: auto; } }
+@media (max-width: 1023px) { .showroom-header { padding: 14px 22px; min-height: 72px; } .brand-product, .brand-divider { display: none; } .stage-caption { bottom: 44px; left: 24px; gap: 12px; } .scene-stats dd { font-size: 18px; } .stage-caption h2 { font-size: 22px; } .scene-context { display: none; } .scene-disclaimer { left: 24px; bottom: 12px; } .panel-intro { padding-top: 24px; } .step-navigation { padding-bottom: 16px; } .panel-footer { position: sticky; bottom: 0; z-index: 5; padding-block: 16px; gap: 14px; box-shadow: 0 -8px 24px rgb(20 40 30 / 3%); } }
+@media (max-width: 600px) { .showroom-header { padding: 12px 16px; gap: 8px; min-height: 64px; } .brand-link img { width: 136px; } .header-actions { gap: 0; } .mode-switch > button { padding-inline: 10px; font-size: 12px; min-height: 44px; } .mode-switch svg { display: none; } .stage { height: 40dvh; min-height: 310px; } .stage-toolbar { top: 12px; left: 12px; right: 12px; } .view-tools { gap: 6px; } .view-switch > button { padding-inline: 9px; font-size: 11px; } .view-options > summary { width: 44px; } .view-options-menu { width: 220px; } .replay-button { min-height: 44px; margin-left: auto; font-size: 11px; padding-inline: 10px; } .stage-caption { left: 18px; right: 18px; bottom: 42px; gap: 7px; } .stage-caption h2 { font-size: 18px; } .scene-stats { gap: 18px; } .scene-stats > div { gap: 2px; } .scene-stats dt { font-size: 10px; } .scene-stats dd { font-size: 16px; } .scene-stats > div:nth-child(2) { display: none; } .scene-disclaimer { left: 18px; right: 18px; font-size: 9px; bottom: 10px; } .panel-intro { padding: 22px 24px 18px; } .panel-intro h1 { font-size: 29px; } .panel-intro > p { font-size: 13px; } .step-content { padding: 24px; } .step-content > .panel-section { margin-inline: -24px; } .panel-footer { padding-inline: 24px; } .step-navigation { padding-inline: 18px; } .preview-content { padding-inline: 24px; } }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Úzké okno: 3D náhled zůstává nahoře při posouvání voleb, jinak změna proběhne mimo zorné pole a vypadá, že se nic neděje. */
+@media (max-width: 1023px) {
+  .stage { position: sticky; top: 0; z-index: 6; }
+}
+
+/* Poptávka (Náhled): jednoduchý formulář bez modalu, vedle souhrnu a ceny. */
+.inquiry { display: grid; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+.text-input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }
+.text-input:hover { border-color: var(--line-strong); }
+.text-input[aria-invalid="true"] { border-color: var(--danger); }
+textarea.text-input { min-height: 96px; resize: vertical; }
+.inquiry-intents { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; }
+.inquiry-intent { display: flex; gap: 12px; align-items: flex-start; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); cursor: pointer; }
+.inquiry-intent:has(input:checked) { border-color: var(--accent); background: var(--surface-2); }
+.inquiry-intent input { margin-top: 3px; accent-color: var(--accent); }
+.inquiry-error { margin: 0; font-size: 13px; color: var(--danger); }
+.inquiry-note { padding: 12px 14px; border: 1px solid var(--warn-line); border-radius: var(--radius); background: var(--warn-bg); color: var(--warn-text); font-size: 13px; }
+.inquiry-done { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+.hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
