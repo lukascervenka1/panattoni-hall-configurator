@@ -298,45 +298,47 @@ function excludeSignInterval(intervals: SignInterval[], lo: number, hi: number):
   ]);
 }
 
-/** Logo má přednost před horními fasádními okny, ale respektuje pevné otvory a svody. Bez závislosti na Three.js. */
+/** Rohové logo má přednost před horními fasádními okny a svody, ale respektuje pevné otvory. Bez Three.js. */
 function placeFacadeSigns(dimensions: Dimensions, openings: PlacedOpening[]): HallSign[] {
   const C = dimensions.clearHeightM;
   const aspect = G.facadeSign.aspect;
-  const out: HallSign[] = [];
-  for (const facade of ["front", "right"] as const) {
-    const len = facadeLengthM(dimensions, facade);
-    const margin = Math.min(3, len * 0.08);
-    const desired = Math.min(18, dimensions.lengthM * 0.28, C * 0.22 * aspect) * (facade === "right" ? 0.78 : 1);
-    const width = Math.min(desired, len - 2 * margin);
-    const facadeOpenings = openings.filter((o) => o.facade === facade);
-    const tops = [...new Set([C + 0.1, ...facadeOpenings.map((o) => o.sillM - 0.25)])].sort((a, b) => b - a);
-    let placed = false;
-    for (const factor of [1, 0.85, 0.7, 0.55]) {
-      const w = width * factor, h = w / aspect;
-      if (w < 4.5) continue;
-      for (const top of tops) {
-        const bottom = top - h;
-        if (bottom < 3 || top > C + 0.1) continue;
+  const maxWidth = Math.min(18, dimensions.lengthM * 0.28, C * 0.22 * aspect);
+  let best: HallSign[] = [];
+  // U nízké haly s vraty lze oba nápisy společně zmenšit, aby zůstaly zarovnané a nad otvory.
+  for (const sharedFactor of [1, 0.85, 0.7, 0.55]) {
+    const referenceWidth = maxWidth * sharedFactor;
+    // Oba rohové nápisy sdílejí osu; menší boční logo nemá vlastní zarovnání horní hranou.
+    const centerY = C + 0.1 - referenceWidth / aspect / 2;
+    const out: HallSign[] = [];
+    for (const facade of ["front", "right"] as const) {
+      const len = facadeLengthM(dimensions, facade);
+      const margin = Math.min(3, len * 0.08);
+      const desired = referenceWidth * (facade === "right" ? 0.78 : 1);
+      const width = Math.min(desired, len - 2 * margin);
+      const facadeOpenings = openings.filter((o) => o.facade === facade);
+      for (const factor of [1, 0.85, 0.7, 0.55]) {
+        const w = width * factor, h = w / aspect;
+        if (w < 4.5) continue;
+        const top = centerY + h / 2;
+        const bottom = centerY - h / 2;
+        if (bottom < 3 || top > C + 0.1 + 1e-9) continue;
         let free: SignInterval[] = [[margin, len - margin]];
         for (const o of facadeOpenings) {
           if (top > o.sillM - 0.2 && bottom < o.sillM + o.heightM + 0.2) free = excludeSignInterval(free, o.centerU - o.widthM / 2 - 0.3, o.centerU + o.widthM / 2 + 0.3);
         }
-        // Stejné pozice svodů a vyloučení u otvorů jako v buildShell.
-        if (facade === "front") for (let u = 12; u < len - 6; u += 24) {
-          if (!facadeOpenings.some((o) => Math.abs(o.centerU - u) < o.widthM / 2 + 0.6)) free = excludeSignInterval(free, u - 0.3, u + 0.3);
-        }
+        // Rohové logo má přednost před svody; kolidující svod vynechává buildShell.
         const spans = free.filter(([a, b]) => b - a >= w);
         const span = facade === "front" ? spans.at(-1) : spans[0];
         if (!span) continue;
         const centerU = facade === "front" ? span[1] - w / 2 : span[0] + w / 2;
-        out.push({ facade, centerU, centerY: top - h / 2, widthM: w, heightM: h });
-        placed = true;
+        out.push({ facade, centerU, centerY, widthM: w, heightM: h });
         break;
       }
-      if (placed) break;
     }
+    if (out.length === 2) return out;
+    if (out.length > best.length) best = out;
   }
-  return out;
+  return best;
 }
 
 /** Stabilní kotvy loga: režim denního světla jejich polohu ani rozměr nemění. */

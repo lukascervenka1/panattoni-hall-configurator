@@ -9,7 +9,7 @@ import type { PriceState } from "./usePrice";
  * - při chybě serveru se nezobrazuje poslední cena,
  * - během přepočtu je předchozí hodnota označena jako zastaralá.
  */
-export function PriceHeadline({ state, onRetry }: { state: PriceState; onRetry: () => void }) {
+export function PriceHeadline({ state, onRetry, compact = false }: { state: PriceState; onRetry: () => void; compact?: boolean }) {
   if (state.status === "error" || state.status === "invalid") {
     return (
       <div role="alert" className="grid gap-1.5">
@@ -39,7 +39,7 @@ export function PriceHeadline({ state, onRetry }: { state: PriceState; onRetry: 
     <div className="grid gap-1" aria-busy={loading} data-testid="price-headline">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-semibold text-muted">
-          {data.isComplete ? "Orientační cena realizace" : "Dílčí součet (orientační)"} · bez DPH
+          {data.isComplete ? (compact ? "Orientační cena" : "Orientační cena realizace") : (compact ? "Dílčí součet" : "Dílčí součet (orientační)")} · bez DPH
         </span>
         <span className="chip">DEMO</span>
       </div>

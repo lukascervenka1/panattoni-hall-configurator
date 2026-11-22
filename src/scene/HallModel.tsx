@@ -9,6 +9,7 @@ import type { HallConfig } from "@/configurator/schema/config";
 import type { HighlightId, SectionId } from "@/configurator/state/ui-store";
 import { buildOpeningDetails, buildFloor, buildFloorMarkings, buildLightPools, buildLightShafts, buildOffice, buildOfficeOutline, buildPartitions, buildPv, buildRoof, buildRoofDetails, buildShell } from "./geometry";
 import { DampedStd, useAppear, useGrowY } from "./motion";
+import { easeOut } from "./build";
 import { RoofFans } from "./RoofFans";
 import { Robots } from "./RobotsView";
 import { OfficeFurniture } from "./OfficeFurnitureView";
@@ -79,6 +80,7 @@ export function HallModel({ config, target, build, look, live, indoorLive, secti
   const officeRef = useRef<THREE.Group>(null);
   const pvRef = useRef<THREE.Group>(null);
   const partitionRef = useRef<THREE.Group>(null);
+  const daylightBandMaterial = useRef<THREE.MeshStandardMaterial>(null);
   /* eslint-disable react-hooks/exhaustive-deps */
   const shell = useMemo(() => buildShell(config, { dockHouse: look.dock.house, omitOpeningDetails: true }), [shapeKey, look.dock.house]);
   const roof = useMemo(() => buildRoof(config.dimensions, TILE.membrane, layoutSkylights(config)), [roofKey]);
@@ -120,6 +122,8 @@ export function HallModel({ config, target, build, look, live, indoorLive, secti
   const rackAppear = useAppear(String(look.partitions), build.furnish);
   const pvAppear = useAppear(String(look.pvShare));
   const partitionAppear = useAppear(String(look.partitions));
+  // Colour-only cladding changes keep the white ribbon in place; choosing facade daylight fades it in once.
+  const daylightBandAppear = useAppear(config.daylight === "roof" ? "solid" : "windows", undefined, 0.8);
   useGrowY(pvRef, pvAppear);
   useGrowY(partitionRef, partitionAppear);
 
@@ -159,6 +163,9 @@ export function HallModel({ config, target, build, look, live, indoorLive, secti
   // Základ roste od středu, střecha dosedá shora, vestavba "vyroste" po výšce.
   useFrame((_, delta) => {
     const st = build.state.current;
+    if (daylightBandMaterial.current) {
+      daylightBandMaterial.current.opacity = build.reducedMotion ? 1 : easeOut(daylightBandAppear.current);
+    }
     if (roofRef.current) {
       const targetY = st.roofDrop + (roofExploded ? 8 : 0);
       roofRef.current.position.y = build.reducedMotion || Math.abs(roofRef.current.position.y - targetY) < 0.01 ? targetY : THREE.MathUtils.damp(roofRef.current.position.y, targetY, 7, Math.min(delta, 0.05));
@@ -204,6 +211,11 @@ export function HallModel({ config, target, build, look, live, indoorLive, secti
       <mesh geometry={shell.walls} castShadow receiveShadow onClick={pick("dimensions")}>
         <DampedStd map={textures.facadeMap} normalMap={textures.facadeNormal} normalScale={new THREE.Vector2(0.45, 0.45)} color={look.claddingColor} roughness={0.62} metalness={0.18} />
       </mesh>
+      {shell.daylightBand && (
+        <mesh geometry={shell.daylightBand} receiveShadow>
+          <meshStandardMaterial ref={daylightBandMaterial} color="#f5f5f1" map={textures.facadeMap} normalMap={textures.facadeNormal} normalScale={new THREE.Vector2(0.45, 0.45)} roughness={0.62} metalness={0.18} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
+        </mesh>
+      )}
       {shell.plinth && (
         <mesh geometry={shell.plinth} receiveShadow>
           <meshStandardMaterial color="#454c56" roughness={0.85} />

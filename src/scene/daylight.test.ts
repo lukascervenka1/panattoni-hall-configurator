@@ -1,11 +1,48 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { configFor, patch } from "@/tests/helpers";
-import { placeOpenings } from "@/configurator/calculations/layout";
-import { buildOffice, buildRoof, buildRoofDetails, buildShell, facadeMatrix } from "./geometry";
+import { configFor, patch, publicCatalog } from "@/tests/helpers";
+import { facadeLengthM, facadesOf, placeHallSigns, placeOpenings } from "@/configurator/calculations/layout";
+import { buildFacadeWindowBand, buildOffice, buildRoof, buildRoofDetails, buildShell, facadeMatrix } from "./geometry";
 import { layoutSkylights } from "./layout";
 
 describe("geometrie podlaží a prosvětlení", () => {
+  it.each(["rect", "L"] as const)("bílý pás obíhá všechny fasády a u každého pláště zachová otvory i v místě křížení s okrajem pásu (%s)", (shape) => {
+    const base = patch(configFor(), { shape, notch_length_m: 24, notch_width_m: 18, daylight: "both", clear_height_m: 11, office_floors: 3, office_area_m2: 900 });
+    expect(buildFacadeWindowBand({ ...base, daylight: "roof" })).toBeNull();
+    const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    const ray = new THREE.Raycaster();
+    ray.far = 5;
+    const claddings = publicCatalog.options.filter((option) => option.category_id === "cladding");
+    expect(claddings.length).toBeGreaterThan(0);
+    for (const cladding of claddings) {
+      const config = { ...base, selections: { ...base.selections, cladding: cladding.option_id } };
+      const geometry = buildFacadeWindowBand(config)!;
+      expect(geometry).not.toBeNull();
+      const band = new THREE.Mesh(geometry, material);
+      for (const opening of placeOpenings(config)) {
+        const matrix = facadeMatrix(config.dimensions, opening.facade);
+        for (const fraction of [0.05, 0.5, 0.95]) {
+          ray.set(new THREE.Vector3(opening.centerU, opening.sillM + opening.heightM * fraction, 3).applyMatrix4(matrix), new THREE.Vector3(0, 0, -1).transformDirection(matrix));
+          expect(ray.intersectObject(band), `${cladding.option_id}/${opening.id}`).toHaveLength(0);
+        }
+      }
+      for (const facade of facadesOf(config.dimensions)) {
+        const matrix = facadeMatrix(config.dimensions, facade);
+        ray.set(new THREE.Vector3(facadeLengthM(config.dimensions, facade) / 2, config.dimensions.clearHeightM + 0.2, 3).applyMatrix4(matrix), new THREE.Vector3(0, 0, -1).transformDirection(matrix));
+        expect(ray.intersectObject(band).length).toBeGreaterThan(0);
+      }
+      for (const sign of placeHallSigns(config)) {
+        const matrix = facadeMatrix(config.dimensions, sign.facade);
+        ray.set(new THREE.Vector3(sign.centerU, sign.centerY, 3).applyMatrix4(matrix), new THREE.Vector3(0, 0, -1).transformDirection(matrix));
+        expect(ray.intersectObject(band).length).toBeGreaterThan(0);
+      }
+      const triangles = geometry.index ? geometry.index.count / 3 : geometry.getAttribute("position").count / 3;
+      expect(triangles).toBeLessThan(3000);
+      geometry.dispose();
+    }
+    material.dispose();
+  });
+
   it.each(["rect", "L"] as const)("kombinace zachová skutečné otvory ve střeše i ve fasádách (%s)", (shape) => {
     const config = patch(configFor(), { shape, notch_length_m: 24, notch_width_m: 18, daylight: "both" });
     const panels = layoutSkylights(config);

@@ -16,6 +16,26 @@ const configs = [
 ];
 
 describe("plastické logo na fasádě", () => {
+  it.each(configs.map((c, i) => [i, c] as const))("#%i: přední i menší boční logo mají společnou výškovou osu", (_i, config) => {
+    for (const daylight of ["roof", "facade", "both"] as const) {
+      const selected = { ...config, daylight };
+      const signs = layoutHallSigns(selected);
+      expect(signs.map((sign) => sign.facade)).toEqual(["front", "right"]);
+      expect(signs[0]!.centerY).toBeCloseTo(signs[1]!.centerY, 8);
+      // Ověřit i skutečné světové kotvy na obou různě orientovaných stěnách.
+      const mounts = signs.map((sign) => new THREE.Vector3(sign.centerU, sign.centerY, DEMO_GEOMETRY.wallThicknessM).applyMatrix4(facadeMatrix(config.dimensions, sign.facade)));
+      expect(mounts[0]!.y).toBeCloseTo(mounts[1]!.y, 8);
+    }
+  });
+
+  it.each(configs.map((c, i) => [i, c] as const))("#%i: přední logo končí u kraje fasády stejně jako boční začíná u rohu", (_i, config) => {
+    for (const sign of layoutHallSigns(config)) {
+      const length = facadeLengthM(config.dimensions, sign.facade);
+      const edge = sign.facade === "front" ? length - sign.centerU - sign.widthM / 2 : sign.centerU - sign.widthM / 2;
+      expect(edge).toBeCloseTo(Math.min(3, length * 0.08), 5);
+    }
+  });
+
   it.each(configs.map((c, i) => [i, c] as const))("#%i: fasádní a kombinované prosvětlení zachovají polohu i velikost loga", (_i, config) => {
     const roof = { ...config, daylight: "roof" as const };
     const baseline = layoutHallSigns(roof);

@@ -16,6 +16,7 @@ import {
   notchOf,
   officeLayout,
   placeOpenings,
+  placeHallSigns,
   totalHeightM,
   type Dimensions,
   type FacadeId,
@@ -42,6 +43,8 @@ export interface ShellGeometry {
   frames: THREE.BufferGeometry | null;
   plinth: THREE.BufferGeometry | null;
   band: THREE.BufferGeometry | null;
+  /** Bílý architektonický pás kolem horních fasádních oken, se skutečnými otvory. */
+  daylightBand: THREE.BufferGeometry | null;
   pipes: THREE.BufferGeometry | null;
   /** Čísla vrat na modrých tabulkách (UV do atlasu čísel, viz textures.ts). */
   plates: THREE.BufferGeometry | null;
@@ -142,11 +145,50 @@ interface Buckets {
   plates: Bucket;
 }
 
+/** Paint the facade at full scale, excluding every opening, including openings crossing the band's edges. */
+export function buildFacadeWindowBand(config: HallConfig, placed = placeOpenings(config)): THREE.BufferGeometry | null {
+  const windows = placed.filter((o) => o.kind === "hallWindow");
+  if (windows.length === 0) return null;
+  const signs = placeHallSigns(config);
+  const bottom = Math.max(3, Math.min(
+    ...windows.map((o) => o.sillM - 0.4),
+    ...signs.map((s) => s.centerY - s.heightM / 2 - 0.3),
+  ));
+  // Stop just below the existing navy cornice (its lower edge is C + 0.35 m).
+  const top = config.dimensions.clearHeightM + 0.32;
+  const pieces: THREE.BufferGeometry[] = [];
+  for (const facade of facadesOf(config.dimensions)) {
+    const length = facadeLengthM(config.dimensions, facade);
+    const matrix = facadeMatrix(config.dimensions, facade);
+    const holes = placed.filter((o) => o.facade === facade && o.sillM < top && o.sillM + o.heightM > bottom);
+    const cuts = [...new Set([0, length, ...holes.flatMap((o) => [Math.max(0, o.centerU - o.widthM / 2), Math.min(length, o.centerU + o.widthM / 2)])])].sort((a, b) => a - b);
+    for (let i = 0; i < cuts.length - 1; i++) {
+      const u0 = cuts[i]!, u1 = cuts[i + 1]!;
+      if (u1 - u0 < 1e-6) continue;
+      const blocked = holes.filter((o) => o.centerU + o.widthM / 2 > u0 + 1e-6 && o.centerU - o.widthM / 2 < u1 - 1e-6)
+        .map((o) => [Math.max(bottom, o.sillM), Math.min(top, o.sillM + o.heightM)] as const).sort((a, b) => a[0] - b[0]);
+      let cursor = bottom;
+      for (const [lo, hi] of [...blocked, [top, top] as const]) {
+        if (lo > cursor + 1e-6) {
+          const plane = new THREE.PlaneGeometry(u1 - u0, lo - cursor);
+          const position = plane.getAttribute("position"), uv = plane.getAttribute("uv");
+          for (let p = 0; p < position.count; p++) uv.setXY(p, position.getX(p) + (u0 + u1) / 2, position.getY(p) + (cursor + lo) / 2);
+          plane.translate((u0 + u1) / 2, (cursor + lo) / 2, T + 0.008).applyMatrix4(matrix);
+          pieces.push(plane);
+        }
+        cursor = Math.max(cursor, hi);
+      }
+    }
+  }
+  return merge(pieces);
+}
+
 export function buildShell(config: HallConfig, opts: { dockHouse?: boolean; omitOpeningDetails?: boolean } = {}): ShellGeometry {
   const dims = config.dimensions;
   const C = dims.clearHeightM;
   const H = totalHeightM(C);
   const placed = placeOpenings(config);
+  const signs = placeHallSigns(config);
 
   const walls: THREE.BufferGeometry[] = [];
   const b: Buckets = {
@@ -210,7 +252,8 @@ export function buildShell(config: HallConfig, opts: { dockHouse?: boolean; omit
     // Okapové svody po 24 m na dlouhých fasádách, jen mimo otvory.
     if (facade === "front" || facade === "rear") {
       for (let u = 12; u < len - 6; u += 24) {
-        const hits = list.some((o) => Math.abs(o.centerU - u) < o.widthM / 2 + 0.6);
+        const hits = list.some((o) => Math.abs(o.centerU - u) < o.widthM / 2 + 0.6)
+          || signs.some((s) => s.facade === facade && Math.abs(s.centerU - u) < s.widthM / 2 + 0.3);
         if (hits) continue;
         to(cyl(0.075, C + 0.7, u, (C + 0.7) / 2 + 0.2, T + 0.11), b.pipes);
       }
@@ -234,6 +277,7 @@ export function buildShell(config: HallConfig, opts: { dockHouse?: boolean; omit
     frames: merge(b.frames),
     plinth: merge(b.plinth),
     band: merge(b.band),
+    daylightBand: buildFacadeWindowBand(config, placed),
     pipes: merge(b.pipes),
     plates: merge(b.plates),
   };

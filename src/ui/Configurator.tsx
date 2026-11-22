@@ -4,7 +4,7 @@ import type { PublicCatalog } from "@/catalog/public";
 import { ConfigProvider, useConfigStore } from "@/configurator/state/config-store";
 import { CONFIG_STEPS, useUiStore } from "@/configurator/state/ui-store";
 import { ConceptSection, DimensionsSection, OfficeSection, OpeningsSection } from "./Controls";
-import { MaterialSections } from "./MaterialSections";
+import { MaterialNavigation, MaterialSections } from "./MaterialSections";
 import { IconArrow, IconBuild, IconEye } from "./icons";
 import { PriceBreakdown, PriceHeadline } from "./PriceCard";
 import { InquiryForm } from "./InquiryForm";
@@ -36,7 +36,7 @@ function StepNavigation() {
   const step = useUiStore((s) => s.step);
   const setStep = useUiStore((s) => s.setStep);
   return (
-    <nav className="step-navigation" aria-label="Kroky konfigurace">
+    <nav className="step-navigation" data-compact={step === 4} aria-label="Kroky konfigurace">
       {CONFIG_STEPS.map((item, i) => (
         <button key={item.section} type="button" aria-label={`${i + 1}. ${item.label}`} aria-current={step === i ? "step" : undefined} onClick={() => setStep(i)}>
           <span className="step-number">{i + 1}</span><span>{item.label}</span>
@@ -53,19 +53,31 @@ function BuildPanel({ price }: { price: ReturnType<typeof usePrice> }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStep = useRef(step);
+  const previousSection = useRef<string | null>(null);
   const active = CONFIG_STEPS[step]!;
+  const equipmentSection = useUiStore((s) => s.openSection);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
+    if (step === 4 && previousStep.current === 4 && previousSection.current !== equipmentSection && window.matchMedia("(max-width: 1023px)").matches) {
+      const content = scrollRef.current;
+      const navigation = content?.previousElementSibling;
+      if (content && navigation instanceof HTMLElement && navigation.classList.contains("equipment-navigation")) {
+        const stickyTop = Number.parseFloat(getComputedStyle(navigation).top) || 0;
+        window.scrollBy({ top: content.getBoundingClientRect().top - stickyTop - navigation.offsetHeight, behavior: "instant" });
+      }
+    }
     if (previousStep.current !== step) headingRef.current?.focus({ preventScroll: true });
     previousStep.current = step;
-  }, [step]);
+    previousSection.current = equipmentSection;
+  }, [step, equipmentSection]);
   return (
     <>
-      <div className="panel-intro"><h1>Vaše nová hala.</h1><p>Od první představy k vlastnímu prostoru.</p></div>
+      <div className={`panel-intro${step === 4 ? " equipment-intro" : ""}`}><h1>Vaše nová hala.</h1>{step !== 4 && <p>Od první představy k vlastnímu prostoru.</p>}</div>
       <StepNavigation />
+      {step === 4 && <MaterialNavigation />}
       <div className="panel-scroll" ref={scrollRef}>
-        <div className="step-content" key={step}>
-          <div className="step-heading"><p className="step-counter">Krok {step + 1} z {CONFIG_STEPS.length}</p><h2 ref={headingRef} tabIndex={-1}>{active.title}</h2><p>{active.description}</p></div>
+        <div className={`step-content${step === 4 ? " equipment-content" : ""}`} key={step}>
+          {step !== 4 && <div className="step-heading"><p className="step-counter">Krok {step + 1} z {CONFIG_STEPS.length}</p><h2 ref={headingRef} tabIndex={-1}>{active.title}</h2><p>{active.description}</p></div>}
           {step === 0 && <ConceptSection embedded />}
           {step === 1 && <DimensionsSection embedded />}
           {step === 2 && <OpeningsSection embedded />}
@@ -73,8 +85,8 @@ function BuildPanel({ price }: { price: ReturnType<typeof usePrice> }) {
           {step === 4 && <MaterialSections />}
         </div>
       </div>
-      <div className="panel-footer">
-        <PriceHeadline state={price.state} onRetry={price.retry} />
+      <div className="panel-footer build-footer">
+        <PriceHeadline state={price.state} onRetry={price.retry} compact />
         <div className="step-actions">
           <button type="button" className="btn back-button" disabled={step === 0} onClick={() => setStep(step - 1)} aria-label="Předchozí krok"><IconArrow back /></button>
           <button type="button" className="btn btn-primary next-button" onClick={() => step < CONFIG_STEPS.length - 1 ? setStep(step + 1) : setMode("preview")}>

@@ -303,8 +303,8 @@ h3 {
 .header-actions { display: flex; align-items: center; gap: 28px; }
 .mode-switch { border: 0; background: var(--surface-2); }
 .mode-switch > button { display: flex; align-items: center; gap: 8px; font-size: 13px; min-height: 44px; }
-.workspace { flex: 1; display: grid; grid-template-columns: 1fr; min-height: 0; }
-.stage { position: relative; height: 46dvh; min-height: 300px; background: var(--bg); touch-action: pan-y; }
+.workspace { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.stage { position: relative; min-width: 0; height: 46dvh; min-height: 300px; background: var(--bg); touch-action: pan-y; }
 .panel { background: var(--surface); min-width: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
 .panel-intro { padding: 30px 28px 24px; }
 .panel-intro h1 { font-size: 34px; line-height: 1.15; letter-spacing: -1.1px; }
@@ -402,6 +402,53 @@ h3 {
 }
 
 /* Poptávka (Náhled): jednoduchý formulář bez modalu, vedle souhrnu a ceny. */
+.equipment-intro { padding-block: 16px 12px; }
+.equipment-intro h1 { font-size: 26px; letter-spacing: -.6px; }
+.step-navigation[data-compact='true'] { padding-top: 0; padding-bottom: 10px; }
+.step-navigation[data-compact='true'] button { min-height: 54px; gap: 6px; }
+.equipment-navigation { flex-shrink: 0; padding: 12px 28px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.equipment-location { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.equipment-location > span:first-child { color: var(--text); font-weight: 600; }
+.equipment-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.equipment-tabs > button { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: flex-start; gap: 5px; padding: 7px 8px; font: inherit; font-size: 12px; line-height: 1.3; text-align: left; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); background: var(--surface); cursor: pointer; transition: background 150ms, border-color 150ms; }
+.equipment-tabs > button > span { font-size: 11px; opacity: .75; }
+.equipment-tabs > button:hover { border-color: var(--navy); color: var(--navy); }
+.equipment-tabs > button[aria-selected='true'] { color: var(--on-accent); border-color: var(--navy); background: var(--navy); font-weight: 600; }
+.equipment-content { padding-top: 20px; }
+.equipment-panel { display: grid; gap: 12px; }
+.equipment-heading { margin-bottom: 4px; }
+.equipment-heading h2 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: -.4px; }
+.equipment-heading > p { margin: 7px 0 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+.equipment-category { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.equipment-category > summary { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; list-style: none; cursor: pointer; }
+.equipment-category > summary::-webkit-details-marker { display: none; }
+.equipment-category > summary > span:first-child { min-width: 0; display: grid; gap: 4px; }
+.equipment-category-title { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.equipment-selection { font-size: 12px; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere; }
+.equipment-category[open] { border-color: var(--line-strong); }
+.equipment-category[open] > summary { border-bottom: 1px solid var(--line); background: var(--surface-2); border-radius: 7px 7px 0 0; }
+.equipment-chevron { flex-shrink: 0; color: var(--muted); transition: transform 150ms; }
+.equipment-category[open] > summary .equipment-chevron { transform: rotate(180deg); }
+.equipment-category-body { display: grid; gap: 12px; padding: 12px 10px 14px; }
+.equipment-category-body .choice > button > span:first-child { width: 48px; height: 48px; }
+.equipment-category-body .choice > button { gap: 10px; }
+.equipment-category-body .choice { border-radius: 6px; }
+.equipment-model-views > summary { min-height: 44px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--navy); cursor: pointer; }
+.equipment-model-views[open] > summary { margin-bottom: 8px; }
+.equipment-category-help > summary { min-height: 44px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer; }
+.equipment-next-part { min-height: 44px; justify-content: space-between; font-size: 13px; margin-top: 4px; }
+.build-footer { gap: 10px; padding-block: 12px; }
+.build-footer [data-testid='price-headline'] { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
+.build-footer [data-testid='price-value'] { font-size: 20px; letter-spacing: -.4px; white-space: nowrap; }
+.build-footer [data-testid='price-headline'] > div:first-child { gap: 4px 6px; }
+.build-footer [data-testid='price-headline'] > div:first-child > span:first-child { font-size: 11px; line-height: 1.45; }
+.build-footer [data-testid='price-headline'] > [role='status'] { grid-column: 1 / -1; font-size: 11px; line-height: 1.45; }
+.build-footer .next-button { min-height: 44px; padding-inline: 16px; font-size: 13px; }
+.build-footer .back-button { min-width: 44px; min-height: 44px; }
+@media (min-width: 1600px) { .equipment-navigation { padding-inline: 34px; } }
+@media (max-width: 1023px) { .equipment-navigation { position: sticky; top: max(300px, 46dvh); z-index: 7; } }
+@media (max-width: 600px) { .equipment-navigation { top: max(310px, 40dvh); padding-inline: 24px; } .equipment-tabs > button { padding-inline: 6px; font-size: 11px; } .equipment-intro { padding-block: 14px 10px; } .equipment-intro h1 { font-size: 25px; } .equipment-content { padding-top: 18px; } .build-footer { padding-block: 10px; gap: 8px; } }
+
 .inquiry { display: grid; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
 .text-input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }
 .text-input:hover { border-color: var(--line-strong); }

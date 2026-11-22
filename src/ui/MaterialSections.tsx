@@ -7,16 +7,39 @@ import { withParameter } from "@/configurator/schema/config";
 import { useConfigStore } from "@/configurator/state/config-store";
 import { useUiStore, type HighlightId, type SectionId } from "@/configurator/state/ui-store";
 import { effectOf } from "@/scene/options";
-import { Section } from "./Section";
+import { IconChevron } from "./icons";
 
 /** Skupiny kategorií v panelu. Technologie a dispozice nemají v demo seedu ceny (viz docs/ASSUMPTIONS.md). */
-const GROUPS: Array<{ id: SectionId; title: string; categories: CategoryId[] }> = [
-  { id: "roof", title: "Střecha a energie", categories: ["roof", "skylight", "photovoltaics"] },
-  { id: "shell", title: "Konstrukce a skladba", categories: ["cladding", "structure", "floor"] },
-  { id: "fixtures", title: "Vrata a okna", categories: ["dock", "drive_in", "window"] },
-  { id: "technology", title: "Technologie", categories: ["heating_hall", "heating_office", "lighting"] },
-  { id: "layout", title: "Dispozice haly", categories: ["partition"] },
+const GROUPS: Array<{ id: SectionId; label: string; title: string; description: string; categories: CategoryId[] }> = [
+  { id: "shell", label: "Konstrukce", title: "Konstrukce a plášť", description: "Zvolte vzhled fasády, nosnou konstrukci a podlahu.", categories: ["cladding", "structure", "floor"] },
+  { id: "roof", label: "Střecha", title: "Střecha a energie", description: "Nastavte denní světlo, skladbu střechy a fotovoltaiku.", categories: ["roof", "skylight", "photovoltaics"] },
+  { id: "fixtures", label: "Vrata a okna", title: "Vrata a okna", description: "Vyberte provedení nakládacích doků, vjezdů a oken.", categories: ["dock", "drive_in", "window"] },
+  { id: "technology", label: "Technologie", title: "Vytápění a osvětlení", description: "Doplňte technické vybavení haly a kanceláří.", categories: ["heating_hall", "heating_office", "lighting"] },
+  { id: "layout", label: "Dispozice", title: "Vnitřní uspořádání", description: "Přizpůsobte členění prostoru svému provozu.", categories: ["partition"] },
 ];
+
+export function MaterialNavigation() {
+  const section = useUiStore((s) => s.openSection);
+  const setSection = useUiStore((s) => s.setOpenSection);
+  const active = Math.max(0, GROUPS.findIndex((group) => group.id === section));
+  return <div className="equipment-navigation">
+    <div className="equipment-location"><span>Vybavení haly</span><span>Část {active + 1} z {GROUPS.length}</span></div>
+    <div className="equipment-tabs" role="tablist" aria-label="Části vybavení">
+      {GROUPS.map((group, index) => <button key={group.id} type="button" role="tab"
+        id={`equipment-tab-${group.id}`} aria-controls={`equipment-panel-${group.id}`} aria-selected={index === active}
+        tabIndex={index === active ? 0 : -1} onClick={() => setSection(group.id)}
+        onKeyDown={(event) => {
+          const next = event.key === "Home" ? 0 : event.key === "End" ? GROUPS.length - 1
+            : ["ArrowRight", "ArrowDown"].includes(event.key) ? (index + 1) % GROUPS.length
+            : ["ArrowLeft", "ArrowUp"].includes(event.key) ? (index + GROUPS.length - 1) % GROUPS.length : null;
+          if (next === null) return;
+          event.preventDefault();
+          setSection(GROUPS[next]!.id);
+          event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+        }}><span aria-hidden="true">{index + 1}</span>{group.label}</button>)}
+    </div>
+  </div>;
+}
 
 const HIGHLIGHT: Partial<Record<CategoryId, HighlightId>> = { dock: "docks", drive_in: "driveIns" };
 
@@ -70,7 +93,7 @@ function Detail({ option }: { option: CatalogOption }) {
   );
 }
 
-function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
+function CategoryBlock({ categoryId, initiallyOpen = false }: { categoryId: CategoryId; initiallyOpen?: boolean }) {
   const catalog = useConfigStore((s) => s.catalog);
   const config = useConfigStore((s) => s.config);
   const set = useConfigStore((s) => s.setParameter);
@@ -78,6 +101,7 @@ function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
   const category = catalog.categories.find((c) => c.category_id === categoryId)!;
   const options = catalog.options.filter((o) => o.category_id === categoryId);
   const current = config.selections[categoryId];
+  const selectedOption = options.find((option) => option.option_id === current);
 
   // Volba je zakázaná, je-li pro koncept nedostupná, nebo by vyrobila zakázanou kombinaci. Důvod bere z pravidla katalogu.
   const blocked = useMemo(() => {
@@ -101,13 +125,10 @@ function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
   const hi = HIGHLIGHT[categoryId];
 
   return (
-    <div className="grid gap-2" onPointerEnter={() => hi && ui.setHighlight(hi)} onPointerLeave={() => hi && ui.setHighlight(null)}>
-      <div>
-        <h3 id={`cat-${categoryId}`} className="text-[15px]">
-          {category.name_cs}
-        </h3>
-        <p className="field-hint m-0">{category.description_cs}</p>
-      </div>
+    <details className="equipment-category" name="equipment-category" open={initiallyOpen} onPointerEnter={() => hi && ui.setHighlight(hi)} onPointerLeave={() => hi && ui.setHighlight(null)}>
+      <summary><span><span id={`cat-${categoryId}`} className="equipment-category-title">{category.name_cs}</span>
+        <span className="equipment-selection">{selectedOption?.name_cs ?? "Vyberte variantu"}</span></span><span className="equipment-chevron"><IconChevron open={false} /></span></summary>
+      <div className="equipment-category-body">
       <div role="radiogroup" aria-labelledby={`cat-${categoryId}`} className="grid gap-2">
         {options.map((o) => {
           const selected = o.option_id === current;
@@ -119,7 +140,7 @@ function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                aria-describedby={`${o.option_id}-fx`}
+                aria-describedby={selected || reason ? `${o.option_id}-fx` : undefined}
                 disabled={Boolean(reason)}
                 className="flex min-h-11 w-full items-center gap-3 bg-transparent p-0 text-left text-inherit [font:inherit] enabled:cursor-pointer disabled:cursor-not-allowed"
                 onClick={() => {
@@ -155,14 +176,14 @@ function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
                 <p id={`${o.option_id}-fx`} className="mb-0 mt-1.5 text-[13px] text-[color:var(--warn-text)]">
                   Nedostupné: {reason}
                 </p>
-              ) : (
+              ) : selected ? (
                 <p id={`${o.option_id}-fx`} className="mb-0 mt-1.5 text-[13px] text-muted">
                   <strong className="font-semibold">{effect.visible ? "Viditelná změna." : "Bez změny vzhledu."}</strong> {effect.text_cs}
                 </p>
-              )}
+              ) : null}
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3">
                 <Detail option={o} />
-                {!reason && effect.view && (
+                {selected && !reason && effect.view && (
                   <button type="button" className="btn btn-sm" onClick={() => show(effect.view!)}>
                     Ukázat v modelu
                   </button>
@@ -172,38 +193,36 @@ function CategoryBlock({ categoryId }: { categoryId: CategoryId }) {
           );
         })}
       </div>
-    </div>
+      <details className="equipment-category-help"><summary>O kategorii: {category.name_cs.toLocaleLowerCase("cs-CZ")}</summary><p className="field-hint m-0">{category.description_cs}</p></details>
+      </div>
+    </details>
   );
 }
 
 export function MaterialSections() {
-  const catalog = useConfigStore((s) => s.catalog);
   const daylight = useConfigStore((s) => s.config.daylight);
-  const selections = useConfigStore((s) => s.config.selections);
-  // Souhrn sekce: jen odchylky od standardu, ať je řádek krátký.
-  const summary = (cats: CategoryId[]) => {
-    const changed = cats
-      .map((c) => catalog.options.find((o) => o.option_id === selections[c]))
-      .filter((o): o is CatalogOption => Boolean(o) && !o!.details.is_standard)
-      .map((o) => o.name_cs);
-    return changed.length === 0 ? "Vše standardní" : changed.join(" · ");
-  };
+  const section = useUiStore((s) => s.openSection);
+  const setSection = useUiStore((s) => s.setOpenSection);
+  const index = Math.max(0, GROUPS.findIndex((group) => group.id === section));
+  const group = GROUPS[index]!;
   return (
-    <>
-      {GROUPS.map((g) => (
-        <Section key={g.id} id={g.id} title={g.title} summary={summary(g.categories)}>
-          {g.id === "roof" && <><DaylightOptions />{daylight !== "roof" && <CategoryBlock categoryId="window" />}<RoofViews /></>}
-          {g.categories.filter((c) => c !== "skylight" || daylight !== "facade").map((c) => (
-            <CategoryBlock key={c} categoryId={c} />
+    <section key={group.id} id={`equipment-panel-${group.id}`} role="tabpanel" aria-labelledby={`equipment-tab-${group.id}`} tabIndex={0} className="equipment-panel">
+          <div className="equipment-heading"><h2>{group.title}</h2><p>{group.description}</p></div>
+          {group.id === "roof" && <details className="equipment-category" name="equipment-category" open>
+            <summary><span><span className="equipment-category-title">Denní světlo</span><span className="equipment-selection">{daylight === "roof" ? "Střešní světlíky" : daylight === "facade" ? "Fasádní okna" : "Světlíky + fasádní okna"}</span></span><span className="equipment-chevron"><IconChevron open={false} /></span></summary>
+            <div className="equipment-category-body"><DaylightOptions /></div>
+          </details>}
+          {group.categories.filter((c) => c !== "skylight" || daylight !== "facade").map((c, i) => (
+            <CategoryBlock key={c} categoryId={c} initiallyOpen={group.id !== "roof" && i === 0} />
           ))}
-          {(g.id === "technology" || g.id === "roof") && (
+          {group.id === "roof" && <details className="equipment-model-views"><summary>Prohlédnout střechu v modelu</summary><RoofViews /></details>}
+          {(group.id === "technology" || group.id === "roof") && (
             <p className="field-hint m-0">
               Technologie ukazujeme jen ilustračně. Nejde o výpočet spotřeby, výroby energie ani úspor. Cena alternativ vyžaduje individuální kalkulaci.
             </p>
           )}
-        </Section>
-      ))}
-    </>
+          {index < GROUPS.length - 1 && <button type="button" className="btn equipment-next-part" onClick={() => setSection(GROUPS[index + 1]!.id)}>Další část: {GROUPS[index + 1]!.label}<span aria-hidden="true">→</span></button>}
+    </section>
   );
 }
 

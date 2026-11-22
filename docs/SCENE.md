@@ -211,3 +211,13 @@ V kroku Vybavení → Střecha lze vybrat také „Světlíky + fasádní okna�
 ## Nabídka pohledů na mobilu
 
 `ViewToolbar` přes `ResizeObserver` a otevření nabídky měří dostupnou výšku uvnitř 3D náhledu od skutečné pozice nabídky k jeho spodní hraně. Respektuje i zalomení toolbaru a otočení telefonu; nezávisí na výšce celé stránky. Nabídka má vlastní svislé posouvání a `overscroll-behavior: contain`, takže její spodní volby nezůstávají oříznuté pod konfigurací a tah na konci nabídky neposouvá stránku.
+
+
+## Rohové logo a bílý pás fasádních oken
+
+Přední logo končí u pravého kraje čelní fasády se stejným odstupem, s jakým boční logo začíná u rohu. Logo má přednost před okapovým svodem: kolidující svod se vynechá, logo se kvůli němu neodsouvá. Poloha stále nezávisí na režimu denního světla; horní okna respektují rezervovaný prostor loga.
+
+`buildFacadeWindowBand` v `geometry.ts` generuje při fasádním nebo kombinovaném prosvětlení bílý pás po všech fasádách včetně vnitřních stěn L. Jeho horní hrana končí těsně pod navy linkou a spodní zahrnuje řadu oken i logo. Povrch má stejné UV v metrech, mapu panelů a normálovou mapu jako zbytek opláštění; je bílý u všech katalogových barev pláště. Obdélníkové díly vynechávají všechny skutečné otvory včetně oken administrativy částečně křížících okraj pásu. Sloučená geometrie přidává jediný draw call, přebírá stavební odkrytí i řez a po zapnutí se 0,8 s plynule odhaluje změnou opacity. V úspoře pohybu je hned plně viditelná. Pás je barevný detail existujícího pláště, nepřidává novou účtovanou kategorii.
+
+
+Obě rohová loga sdílejí společnou výškovou osu (`placeFacadeSigns`), i když je boční nápis menší. U nízké haly s vraty se při nedostatku prostoru hledá společné menší měřítko, aby žádné logo nemuselo změnit výšku samostatně nebo zasahovat do otvorů. Regresní test ověřuje i výšku kotev ve světových souřadnicích na obou orientovaných fasádách.
