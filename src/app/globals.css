@@ -436,6 +436,10 @@ h3 {
 .equipment-model-views > summary { min-height: 44px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--navy); cursor: pointer; }
 .equipment-model-views[open] > summary { margin-bottom: 8px; }
 .equipment-category-help > summary { min-height: 44px; display: flex; align-items: center; font-size: 12px; color: var(--muted); cursor: pointer; }
+.carbon-badge { display: inline-flex; align-items: center; gap: 5px; width: fit-content; max-width: 100%; padding: 4px 7px; border-radius: 5px; background: #edf5e8; color: #356333; font-size: 11px; line-height: 1.4; font-weight: 600; vertical-align: middle; }
+.carbon-badge > svg { flex-shrink: 0; }
+.carbon-badge-compact { margin-left: 6px; padding: 2px 3px; }
+.carbon-comparison-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .equipment-next-part { min-height: 44px; justify-content: space-between; font-size: 13px; margin-top: 4px; }
 .build-footer { gap: 10px; padding-block: 12px; }
 .build-footer [data-testid='price-headline'] { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
@@ -448,6 +452,7 @@ h3 {
 @media (min-width: 1600px) { .equipment-navigation { padding-inline: 34px; } }
 @media (max-width: 1023px) { .equipment-navigation { position: sticky; top: max(300px, 46dvh); z-index: 7; } }
 @media (max-width: 600px) { .equipment-navigation { top: max(310px, 40dvh); padding-inline: 24px; } .equipment-tabs > button { padding-inline: 6px; font-size: 11px; } .equipment-intro { padding-block: 14px 10px; } .equipment-intro h1 { font-size: 25px; } .equipment-content { padding-top: 18px; } .build-footer { padding-block: 10px; gap: 8px; } }
+@media (max-width: 1023px) and (max-height: 600px) { .stage { position: relative; top: auto; height: 48dvh; min-height: 160px; } .equipment-navigation { top: 0; } }
 
 .inquiry { display: grid; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
 .text-input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }

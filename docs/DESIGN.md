@@ -31,3 +31,10 @@ Impeccable 4.10.0 je dostupný projektově pro Claude Code v `.claude/skills/imp
 - Produkční build prošel.
 - E2E: serverový test prošel; dalších 11 scénářů nebylo možné provést, protože macOS odmítl spuštění Chromia (MachPortRendezvous bootstrap permission denied). Nejde o výsledek jejich aplikačních asercí.
 - Vizuální kontrola v browseru a měření výkonu zůstávají neověřené.
+
+
+## Orientace ve vybavení a uhlíková stopa
+
+Krok Vybavení má pět viditelných částí (Konstrukce, Střecha, Vrata a okna, Technologie, Dispozice) a vždy jednu rozbalenou kategorii s aktuální volbou v záhlaví. Na mobilu se navigace drží pod 3D náhledem; při nízkém displeji náhled odroluje, aby nezakryl ovládání. Cenový blok při editaci používá kompaktní sazbu a zachovává označení dílčího součtu, DPH i individuální kalkulace.
+
+Zelený SVG lísteček a štítek „Nejnižší uhlíková stopa“ porovnávají uvedené hodnoty GWP A1–A3 dostupných aktivních variant v jedné kategorii (`src/catalog/carbon.ts`). Nejde o porovnání rozdílných materiálových kategorií ani emise celé stavby. Při shodném minimu se označí všechny nejnižší varianty. Chybějící údaj není nula; bez alespoň dvou platných různých hodnot se štítek nevytvoří. U vybrané varianty je lísteček viditelný i ve sbaleném záhlaví. Tooltip uvádí hodnotu a rozsah porovnání, popisek pod nabídkou vysvětluje, že jde o nejnižší uvedené GWP mezi dostupnými variantami kategorie.

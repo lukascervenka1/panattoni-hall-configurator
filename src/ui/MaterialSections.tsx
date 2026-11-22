@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import type { CatalogOption } from "@/catalog/schema";
 import type { CategoryId } from "@/catalog/ids";
+import { lowestCarbonOptionIds } from "@/catalog/carbon";
 import { validateConfig, rulesForProduct } from "@/configurator/rules/validate";
 import { withParameter } from "@/configurator/schema/config";
 import { useConfigStore } from "@/configurator/state/config-store";
@@ -42,6 +43,14 @@ export function MaterialNavigation() {
 }
 
 const HIGHLIGHT: Partial<Record<CategoryId, HighlightId>> = { dock: "docks", drive_in: "driveIns" };
+
+function LowCarbonBadge({ gwp, compact = false }: { gwp: number; compact?: boolean }) {
+  const description = `Nejnižší uvedené GWP A1–A3 mezi dostupnými variantami této kategorie: ${gwp.toLocaleString("cs-CZ")} kg CO₂e na jednotku.`;
+  return <span className={`carbon-badge${compact ? " carbon-badge-compact" : ""}`} title={description}>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.8 3.2c.7 5.5-.6 11.2-5.1 14-3.7 2.2-7.4 1.4-9.3-1.1-2-2.7-1.5-6.4 1.6-8.7 3.5-2.6 7.6-1.3 12.8-4.2Z" fill="currentColor" opacity=".22" /><path d="M20.8 3.2c.7 5.5-.6 11.2-5.1 14-3.7 2.2-7.4 1.4-9.3-1.1-2-2.7-1.5-6.4 1.6-8.7 3.5-2.6 7.6-1.3 12.8-4.2ZM4 21c1.6-5 5.8-8.7 11-11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <span className={compact ? "sr-only" : undefined}>Nejnižší uhlíková stopa</span>
+  </span>;
+}
 
 function Thumb({ option }: { option: CatalogOption }) {
   const { image, image_fit } = option.details;
@@ -117,6 +126,7 @@ function CategoryBlock({ categoryId, initiallyOpen = false }: { categoryId: Cate
     }
     return out;
   }, [catalog, config, categoryId, current, options]);
+  const lowestCarbon = lowestCarbonOptionIds(options, categoryId, new Set(blocked.keys()));
 
   const show = (view: "interior" | "top" | "perspective") => {
     ui.setRoofHidden(false);
@@ -127,7 +137,7 @@ function CategoryBlock({ categoryId, initiallyOpen = false }: { categoryId: Cate
   return (
     <details className="equipment-category" name="equipment-category" open={initiallyOpen} onPointerEnter={() => hi && ui.setHighlight(hi)} onPointerLeave={() => hi && ui.setHighlight(null)}>
       <summary><span><span id={`cat-${categoryId}`} className="equipment-category-title">{category.name_cs}</span>
-        <span className="equipment-selection">{selectedOption?.name_cs ?? "Vyberte variantu"}</span></span><span className="equipment-chevron"><IconChevron open={false} /></span></summary>
+        <span className="equipment-selection">{selectedOption?.name_cs ?? "Vyberte variantu"}{selectedOption && lowestCarbon.has(current) && <LowCarbonBadge gwp={selectedOption.details.gwp_kg_co2e!} compact />}</span></span><span className="equipment-chevron"><IconChevron open={false} /></span></summary>
       <div className="equipment-category-body">
       <div role="radiogroup" aria-labelledby={`cat-${categoryId}`} className="grid gap-2">
         {options.map((o) => {
@@ -168,6 +178,7 @@ function CategoryBlock({ categoryId, initiallyOpen = false }: { categoryId: Cate
                     {o.name_cs}
                     {o.details.is_standard && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-xs font-semibold text-muted">Standard</span>}
                   </span>
+                  {lowestCarbon.has(o.option_id) && <LowCarbonBadge gwp={o.details.gwp_kg_co2e!} />}
                   <span className="text-[13px] text-muted">{o.details.type_cs ?? o.description_cs}</span>
                   {o.details.supplier && <span className="text-[13px] text-muted">{o.details.supplier}</span>}
                 </span>
@@ -193,6 +204,7 @@ function CategoryBlock({ categoryId, initiallyOpen = false }: { categoryId: Cate
           );
         })}
       </div>
+      {lowestCarbon.size > 0 && <p className="carbon-comparison-note">Lísteček označuje nejnižší uvedené GWP A1–A3 mezi dostupnými variantami v této kategorii.</p>}
       <details className="equipment-category-help"><summary>O kategorii: {category.name_cs.toLocaleLowerCase("cs-CZ")}</summary><p className="field-hint m-0">{category.description_cs}</p></details>
       </div>
     </details>
