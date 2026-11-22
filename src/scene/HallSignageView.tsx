@@ -20,7 +20,7 @@ function RaisedSign({ sign, config }: { sign: HallSign; config: HallConfig }) {
 
 /** Inherits wall construction and section clipping. Only the original letters and emblem are extruded. */
 export function HallSignage({ config }: { config: HallConfig }) {
-  const signature = JSON.stringify([config.dimensions, config.openings, config.office, config.daylight]);
+  const signature = JSON.stringify([config.dimensions, config.openings, config.office]);
   const signs = useMemo(() => layoutHallSigns(config), [signature]); // eslint-disable-line react-hooks/exhaustive-deps
   return <group>{signs.map((sign) => <RaisedSign key={sign.facade} sign={sign} config={config} />)}</group>;
 }

@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { configFor, patch } from "@/tests/helpers";
 import { facadeLengthM, placeOpenings, pointInFootprint } from "@/configurator/calculations/layout";
-import { facadeMatrix } from "./geometry";
+import { buildShell, facadeMatrix } from "./geometry";
 import { DEMO_GEOMETRY } from "@/configurator/calculations/constants";
 import { buildHallSignGeometry, layoutHallSigns, logoShapes, SIGNAGE } from "./hallSignage";
 import { layoutSignLamps } from "./buildingDetails";
+import { computeQuantities } from "@/configurator/calculations/quantities";
 
 const configs = [
   configFor("logistics"), configFor("production"), configFor("city_logistics"),
@@ -15,6 +16,52 @@ const configs = [
 ];
 
 describe("plastické logo na fasádě", () => {
+  it.each(configs.map((c, i) => [i, c] as const))("#%i: fasádní a kombinované prosvětlení zachovají polohu i velikost loga", (_i, config) => {
+    const roof = { ...config, daylight: "roof" as const };
+    const baseline = layoutHallSigns(roof);
+    expect(baseline.length).toBeGreaterThan(0);
+    for (const daylight of ["facade", "both"] as const) {
+      const selected = { ...config, daylight };
+      expect(layoutHallSigns(selected)).toEqual(baseline);
+      const windows = placeOpenings(selected).filter((o) => o.kind === "hallWindow");
+      expect(windows.length).toBeGreaterThan(0);
+      for (const window of windows) for (const sign of baseline) {
+        if (sign.facade !== window.facade) continue;
+        const pad = DEMO_GEOMETRY.facadeSign.windowClearanceM;
+        const overlaps = Math.abs(sign.centerU - window.centerU) < (sign.widthM + window.widthM) / 2 + pad
+          && sign.centerY + sign.heightM / 2 + pad > window.sillM
+          && sign.centerY - sign.heightM / 2 - pad < window.sillM + window.heightM;
+        expect(overlaps, `${sign.facade}/${window.id}`).toBe(false);
+      }
+      const quantities = computeQuantities(selected);
+      expect(quantities.hallWindowCount).toBe(windows.length);
+      expect(quantities.hallWindowAreaM2).toBeCloseTo(windows.reduce((area, w) => area + w.widthM * w.heightM, 0), 2);
+    }
+  });
+
+  it("pod logem zůstane skutečná plná fasáda a okna vedle něj zůstanou průhledná", () => {
+    const config = { ...configs[0]!, daylight: "both" as const };
+    const shell = buildShell(config, { omitOpeningDetails: true });
+    const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    const walls = new THREE.Mesh(shell.walls, material);
+    const ray = new THREE.Raycaster();
+    ray.far = 5;
+    for (const sign of layoutHallSigns(config)) {
+      const matrix = facadeMatrix(config.dimensions, sign.facade);
+      for (const offset of [-0.4, 0, 0.4]) {
+        ray.set(new THREE.Vector3(sign.centerU + sign.widthM * offset, sign.centerY, 3).applyMatrix4(matrix), new THREE.Vector3(0, 0, -1).transformDirection(matrix));
+        expect(ray.intersectObject(walls).length).toBeGreaterThan(0);
+      }
+    }
+    for (const window of placeOpenings(config).filter((o) => o.kind === "hallWindow")) {
+      const matrix = facadeMatrix(config.dimensions, window.facade);
+      ray.set(new THREE.Vector3(window.centerU, window.sillM + window.heightM / 2, 3).applyMatrix4(matrix), new THREE.Vector3(0, 0, -1).transformDirection(matrix));
+      expect(ray.intersectObject(walls)).toHaveLength(0);
+    }
+    Object.values(shell).forEach((g) => g?.dispose());
+    material.dispose();
+  });
+
   it("svítidla pod logem nezasahují do oken ani vrat", () => {
     expect(layoutSignLamps(configs[0]!).length).toBeGreaterThan(0);
     for (const c of configs) for (const daylight of ["roof", "facade", "both"] as const) {

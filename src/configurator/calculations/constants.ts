@@ -7,6 +7,11 @@ export const DEMO_GEOMETRY = {
   /** Zjednodušený převod: celková výška = světlá vnitřní výška + tato hodnota (střešní skladba a atika). */
   roofStructureAllowanceM: 2.0,
   wallThicknessM: 0.3,
+  /** Proporce originálního vektorového loga (Brand manual, str. 3) a odstup fasádních oken od znaků. */
+  facadeSign: {
+    aspect: 384.6542 / 61.2781,
+    windowClearanceM: 0.3,
+  },
   dock: {
     widthM: 3,
     heightM: 3,

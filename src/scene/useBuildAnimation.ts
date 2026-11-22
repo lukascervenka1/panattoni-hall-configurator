@@ -25,7 +25,7 @@ export interface BuildAnim {
 
 /**
  * Režisér stavby. Tři situace:
- * 1. První načtení, změna konceptu nebo tlačítko "Přehrát stavbu": přehraje se klip stavby (`AnimationMixer`,
+ * 1. První načtení, změna konceptu nebo interní příkaz k opakování: přehraje se klip stavby (`AnimationMixer`,
  *    viz constructionClip.ts): základ → sloupy → vazníky → opláštění → střecha → vybavení. Lze ji přeskočit.
  * 2. Změna rozměrů nebo výbavy: rozměry se přestaví jednou, doky a vrata přibývají po jednom,
  *    vybavení a okolí zůstávají viditelné.

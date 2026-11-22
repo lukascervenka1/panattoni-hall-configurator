@@ -45,7 +45,7 @@ Zákazník vidí, jak hala vzniká a roste. Řídí to `useBuildAnimation.ts` (r
 
 ### Jak je animace postavená (skill `threejs-animation`)
 
-- **Časová osa stavby je skutečný `AnimationClip`** (`constructionClip.ts`): stopy `floor.scale`, `walls.scale[y]`, `roof.position[y]`, `office.scale[y]` a `reveal.position` (vybavení, okolí, plochy areálu) s Bézierovou interpolací. Klip animuje pomocný "rig" přes `AnimationMixer`; režisér po každém `mixer.update()` hodnoty přečte a předá modelu. Mixer dává přeskočení (`action.time`), přehrání znovu (`reset`) a konec (událost `finished`). Tlačítka **Přeskočit stavbu** a **Přehrát stavbu** jsou v panelu pohledu (jen bez úspory pohybu).
+- **Časová osa stavby je skutečný `AnimationClip`** (`constructionClip.ts`): stopy `floor.scale`, `walls.scale[y]`, `roof.position[y]`, `office.scale[y]` a `reveal.position` (vybavení, okolí, plochy areálu) s Bézierovou interpolací. Klip animuje pomocný "rig" přes `AnimationMixer`; režisér po každém `mixer.update()` hodnoty přečte a předá modelu. Mixer dává přeskočení (`action.time`), přehrání znovu (`reset`) a konec (událost `finished`). Úvodní stavba se přehrává automaticky; panel pohledu tlačítko pro opakování ani přeskočení neobsahuje.
 - **Změny z katalogu a konfigurátoru** jsou procedurální (`motion.tsx`, `MathUtils.damp`, nezávislé na snímkové frekvenci): barvy fasády, podlahy, střechy, oken, světlíků a rámů se plynule přelévají (`DampedStd`); fotovoltaika, příčky, vazníky, vytápění, tepelné čerpadlo a regály po výběru **vyrostou** (`useAppear`, `useGrowY`) místo aby naskočily. Vybavení čeká na dokončení úvodní stavby.
 - **Ventilátory** na střešních jednotkách se otáčejí (`RoofFans.tsx`) jen při zapnutém "Provoz".
 
@@ -206,3 +206,8 @@ Parkové koruny nyní tvoří tři střídmé shluky s drobnými větvemi; geome
 `vehicleGeometry.ts` obsahuje společné modely osobního auta, dodávky a kamionu pro celý provoz. Osobní auto a dodávka mají tvarovanou zaoblenou karoserii se skutečnými výřezy podběhů, užší kabinu směrem ke střeše, skloněná čelní skla, samostatná boční okna s ponechanými sloupky, disky kol, světla, zrcátka, madla a nárazníky. `ParkedCarsView.tsx` používá stejný osobní vůz v instancovaných materiálových dávkách v obou režimech okolí, při zachování skutečných rozměrů a natočení. Minimalistické komunikace používají stejnou výšku povrchu jako podrobný areál, takže kola dosedají na vozovku. Kolizní obálky dopravy se nemění; `vehicleGeometry.test.ts` ověřuje, že uvnitř zůstávají i všechny přidané detaily.
 
 V kroku Vybavení → Střecha lze vybrat také „Světlíky + fasádní okna“ (`daylight: both`). Obě soustavy otvorů zůstávají současně skutečně ve 3D geometrii. Provedení oken a světlíků lze volit nezávisle, souhrn a serverová kalkulace účtují obě skutečná množství. Konfigurace se stejným režimem se exportuje i přijímá zpět a předává do souhrnu poptávky. Dřívější konfigurace zůstávají kompatibilní.
+
+
+## Nabídka pohledů na mobilu
+
+`ViewToolbar` přes `ResizeObserver` a otevření nabídky měří dostupnou výšku uvnitř 3D náhledu od skutečné pozice nabídky k jeho spodní hraně. Respektuje i zalomení toolbaru a otočení telefonu; nezávisí na výšce celé stránky. Nabídka má vlastní svislé posouvání a `overscroll-behavior: contain`, takže její spodní volby nezůstávají oříznuté pod konfigurací a tah na konci nabídky neposouvá stránku.

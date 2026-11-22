@@ -197,7 +197,8 @@ function distributeCentered(count: number, facadeLen: number, w: number, preferr
   return Array.from({ length: count }, (_, i) => facadeLen / 2 + (i - (count - 1) / 2) * pitch);
 }
 
-export function placeOpenings(config: Pick<HallConfig, "dimensions" | "openings" | "office"> & Partial<Pick<HallConfig, "daylight">>): PlacedOpening[] {
+/** Pevné otvory: vrata, okna administrativy a vstup. Předcházejí umístění loga i horních fasádních oken. */
+function placeArchitecturalOpenings(config: Pick<HallConfig, "dimensions" | "openings" | "office">): PlacedOpening[] {
   const { dimensions: d, openings } = config;
   const out: PlacedOpening[] = [];
 
@@ -279,7 +280,82 @@ export function placeOpenings(config: Pick<HallConfig, "dimensions" | "openings"
       out.push({ id: "entrance-1", facade: "front", kind: "entrance", centerU: entranceU, widthM: E.widthM, heightM: E.heightM, sillM: 0, floor: 0 });
     }
   }
-  if (config.daylight === "facade" || config.daylight === "both") out.push(...placeHallWindows(config));
+  return out;
+}
+
+export interface HallSign {
+  facade: "front" | "right";
+  centerU: number;
+  centerY: number;
+  widthM: number;
+  heightM: number;
+}
+
+type SignInterval = [number, number];
+function excludeSignInterval(intervals: SignInterval[], lo: number, hi: number): SignInterval[] {
+  return intervals.flatMap(([a, b]): SignInterval[] => hi <= a || lo >= b ? [[a, b]] : [
+    ...(lo > a ? [[a, lo] as SignInterval] : []), ...(hi < b ? [[hi, b] as SignInterval] : []),
+  ]);
+}
+
+/** Logo má přednost před horními fasádními okny, ale respektuje pevné otvory a svody. Bez závislosti na Three.js. */
+function placeFacadeSigns(dimensions: Dimensions, openings: PlacedOpening[]): HallSign[] {
+  const C = dimensions.clearHeightM;
+  const aspect = G.facadeSign.aspect;
+  const out: HallSign[] = [];
+  for (const facade of ["front", "right"] as const) {
+    const len = facadeLengthM(dimensions, facade);
+    const margin = Math.min(3, len * 0.08);
+    const desired = Math.min(18, dimensions.lengthM * 0.28, C * 0.22 * aspect) * (facade === "right" ? 0.78 : 1);
+    const width = Math.min(desired, len - 2 * margin);
+    const facadeOpenings = openings.filter((o) => o.facade === facade);
+    const tops = [...new Set([C + 0.1, ...facadeOpenings.map((o) => o.sillM - 0.25)])].sort((a, b) => b - a);
+    let placed = false;
+    for (const factor of [1, 0.85, 0.7, 0.55]) {
+      const w = width * factor, h = w / aspect;
+      if (w < 4.5) continue;
+      for (const top of tops) {
+        const bottom = top - h;
+        if (bottom < 3 || top > C + 0.1) continue;
+        let free: SignInterval[] = [[margin, len - margin]];
+        for (const o of facadeOpenings) {
+          if (top > o.sillM - 0.2 && bottom < o.sillM + o.heightM + 0.2) free = excludeSignInterval(free, o.centerU - o.widthM / 2 - 0.3, o.centerU + o.widthM / 2 + 0.3);
+        }
+        // Stejné pozice svodů a vyloučení u otvorů jako v buildShell.
+        if (facade === "front") for (let u = 12; u < len - 6; u += 24) {
+          if (!facadeOpenings.some((o) => Math.abs(o.centerU - u) < o.widthM / 2 + 0.6)) free = excludeSignInterval(free, u - 0.3, u + 0.3);
+        }
+        const spans = free.filter(([a, b]) => b - a >= w);
+        const span = facade === "front" ? spans.at(-1) : spans[0];
+        if (!span) continue;
+        const centerU = facade === "front" ? span[1] - w / 2 : span[0] + w / 2;
+        out.push({ facade, centerU, centerY: top - h / 2, widthM: w, heightM: h });
+        placed = true;
+        break;
+      }
+      if (placed) break;
+    }
+  }
+  return out;
+}
+
+/** Stabilní kotvy loga: režim denního světla jejich polohu ani rozměr nemění. */
+export function placeHallSigns(config: Pick<HallConfig, "dimensions" | "openings" | "office">): HallSign[] {
+  return placeFacadeSigns(config.dimensions, placeArchitecturalOpenings(config));
+}
+
+export function placeOpenings(config: Pick<HallConfig, "dimensions" | "openings" | "office"> & Partial<Pick<HallConfig, "daylight">>): PlacedOpening[] {
+  const out = placeArchitecturalOpenings(config);
+  if (config.daylight === "facade" || config.daylight === "both") {
+    const signs = placeFacadeSigns(config.dimensions, out);
+    const pad = G.facadeSign.windowClearanceM;
+    out.push(...placeHallWindows(config).filter((window) => !signs.some((sign) =>
+      sign.facade === window.facade &&
+      Math.abs(sign.centerU - window.centerU) < (sign.widthM + window.widthM) / 2 + pad &&
+      sign.centerY + sign.heightM / 2 + pad > window.sillM &&
+      sign.centerY - sign.heightM / 2 - pad < window.sillM + window.heightM,
+    )));
+  }
   return out;
 }
 
