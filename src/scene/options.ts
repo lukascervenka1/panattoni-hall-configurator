@@ -35,7 +35,7 @@ export interface SceneLook {
 }
 
 export const DEFAULT_LOOK: SceneLook = {
-  claddingColor: "#a7b0bd",
+  claddingColor: "#f5f5f5",
   structure: { columnColor: "#aeb5bf", columnSize: 0.6, girder: "precast", girderColor: "#b9bec6" },
   floor: { tint: "#a8acb1", roughness: 0.38, jointless: false },
   roof: { membraneTint: "#cfd4d9", undersideColor: "#c3c8ce", timber: false },

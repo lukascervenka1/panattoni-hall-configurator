@@ -11,7 +11,7 @@ export interface OptionTexts {
 
 export const OPTION_TEXTS: Record<string, OptionTexts> = {
   // Opláštění
-  "cladding.spa": { name_cs: "Ruukki SPA E 100", type_cs: "Ocel + minerální vata", color_hex: "#a7b0bd" },
+  "cladding.spa": { name_cs: "Ruukki SPA E 100", type_cs: "Ocel + minerální vata", color_hex: "#f5f5f5" },
   "cladding.ks": { name_cs: "Kingspan KS TL QuadCore", type_cs: "Ocel + QuadCore (PIR)", color_hex: "#97a4b4" },
   "cladding.paroc": { name_cs: "Paroc AST S LEC", type_cs: "Nízkouhlíková ocel + kamenná vlna", color_hex: "#bfb9ad" },
   "cladding.life": { name_cs: "Ruukki SPA E Life LowCarbon", type_cs: "Ocel SSAB Zero + recyklovaná skelná vata", color_hex: "#8fa18f" },

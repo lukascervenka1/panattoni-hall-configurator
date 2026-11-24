@@ -6,6 +6,7 @@ Publikum a účel potvrzené uživatelem: klienti Panattoni vybírají několik 
 
 - Bílé rozhraní #ffffff, neutrální studio #edf0ed, text #20292c, sekundární text #616b70. Navy #001844 pro hlavní tlačítka, aktivní přepínače, navigaci a logo; hover #001b75. Limetkový akcent #93d50a pro stav výběru a drobné detaily.
 - Bai Jamjuree pro nadpisy a čísla, Helvetica Neue / Arial pro ovládání. Jedno výrazné místo: model haly.
+- Výchozí opláštění haly je bílé (`#f5f5f5`) podle upřesněného standardu Panattoni. Barva je shodně v katalogové standardní variantě Ruukki SPA E 100 i ve výchozím vzhledu rendereru pro všechny tři koncepty; ostatní materiálové varianty zachovávají své odstíny.
 - Hlavička používá `public/brand/logo-leaf-navy.svg`: původní vektorové cesty loga s lístečkem z [oficiální publikace Panattoni / HFW, European Logistics & Supply Chain Sustainability Report 2022](https://panattonieurope.com/media/1536/download/004068-European-Logistics-and-Supply-Chain-Sustainability-Report-2022%5B1%5D.pdf?v=1), PDF strana 4. Geometrie a proporce jsou zachované; tiskové spot barvy Pantone 289 C a 375 C jsou převedené na webové hodnoty #001844 a #93d50a podle lokálního Brand guidelines VER 2.0. Tato lokální verze manuálu obsahuje pouze logo bez lístečku.
 - Stabilní rozvržení v obou režimech. Levý panel s postupem po pěti krocích, pravý dominantní náhled. Na mobilu náhled nad obsahem a kompaktní navigace kroků.
 - Každý krok ukazuje pouze relevantní rozhodnutí. Cenový rozpis, technické materiály a ovládání kamery jsou druhá úroveň.

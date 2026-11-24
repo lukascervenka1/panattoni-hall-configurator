@@ -55,6 +55,9 @@ describe("vzhled voleb", () => {
 
   it("fasáda přebírá barvu z katalogu a výchozí vzhled odpovídá standardu", () => {
     expect(standardLook).toEqual(DEFAULT_LOOK);
+    for (const product of ["logistics", "production", "city_logistics"]) {
+      expect(resolveLook(configFor(product).selections, publicCatalog).claddingColor).toBe("#f5f5f5");
+    }
     const eco = resolveLook({ ...configFor().selections, cladding: "cladding.eco" }, publicCatalog);
     expect(eco.claddingColor).toBe(publicCatalog.options.find((o) => o.option_id === "cladding.eco")!.color_hex);
   });
